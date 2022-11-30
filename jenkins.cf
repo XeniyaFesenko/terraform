@@ -1,0 +1,206 @@
+Parameters:
+  ImageId:
+    Type: String
+    Description: us-gov-west-1
+    Default: ami-00ae5d2b6b624712e
+  VpcId:
+    Type: String
+    Description: VPC id
+    Default: "vpc-094de6c7c63b731c7"
+  SubnetId:
+    Type: String
+    Description: Subnet in which to launch an EC2
+    Default: subnet-03efab732811c4fad
+  AvailabilityZone:
+    Type: String
+    Description: Availability Zone into which instance will launch
+    Default: us-gov-west-1a
+  InstanceType:
+    Type: String
+    Description: Choosing t3 medium 
+    Default: t3a.medium
+  KeyName:
+    Description: SSH Keypair to login to the instance 
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    Default: write your pem file name
+
+Resources:
+  RoleforJenkinsServer:
+    Type: "AWS::IAM::Role"
+    Properties:
+        Path: /project/
+        PermissionsBoundary: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/vaec/project-admin
+        RoleName: project-vac01cdr-ec2-jenkins-role-800
+        Tags:                
+          - Key: cdr:env
+            Value: dev
+        AssumeRolePolicyDocument:
+          Version: 2012-10-17
+          Statement:
+           - Effect: Allow
+             Principal:
+               Service:
+                - ec2.amazonaws.com
+               Action:
+                - 'sts:AssumeRole'
+        ManagedPolicyArns:
+        - arn:aws-us-gov:iam::aws:policy/AmazonSSMManagedInstanceCore
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
+        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
+        - arn:aws:iam::aws:policy/AdministratorAccess
+  JenkinsRolePolicies: 
+    Type: "AWS::IAM::Policy"
+    Properties: 
+      PolicyName: "JenkinsInstancePolicy"
+      PolicyDocument: 
+        Version: "2012-10-17"
+        Statement: 
+          - Effect: "Allow"
+            Action: "*"
+            Resource: "*"
+      Roles: 
+        - Ref: RoleforJenkinsServer
+  JenkinsServerEC2Profile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      Path: /project/
+      Roles: project-vac01cdr-ec2-jenkins-role-800
+        - !Ref RoleforJenkinsServer
+  JenkinsSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref VpcId
+      GroupDescription: SG to allow port 22/8080/80/443
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+  JenkinsServer:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
+      AvailabilityZone: !Ref AvailabilityZone
+      KeyName: !Ref KeyName
+      SecurityGroupIds: 
+        - !Ref JenkinsSecurityGroup
+      SubnetId: !Ref SubnetId
+
+      UserData:
+        Fn::Base64: |
+          #! /bin/bash
+          # update os
+          sudo yum update -y
+          # set server hostname as jenkins-server
+          hostnamectl set-hostname jenkins-server
+          # uninstall aws cli version 1
+          rm -rf /bin/aws
+          # install aws cli version 2
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          ./aws/install
+          # install python 3
+          yum install python3 -y
+          # install git
+          yum install git -y
+          # install java
+          yum install java-11-amazon-corretto -y
+          # install jenkins
+          wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat/jenkins.repo
+          rpm --import https://pkg.jenkins.io/redhat/jenkins.io.key
+          amazon-linux-extras install epel
+          yum install jenkins -y
+          systemctl daemon-reload
+          systemctl start jenkins
+          systemctl enable jenkins
+
+3. Need to set up CloudFormation script for IAM/Roles policies for CodeBuild/CodePipeline/CodeDeploy, not able to execute this pipeline inside on the console without roles policies.
+
+	Attaching an example given for ECS roles/policies
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: CDR Service Roles and Policy - POC
+# project-vac01cdrcf-poc-service-roles-and-policy
+ 
+Parameters:
+  pSamlProviderName:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: /vaec/iam/saml-provider
+  pSamlUrl:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: /vaec/iam/saml-url
+    
+Resources:
+  # This role is required by tasks to pull container images and publish container logs to Amazon CloudWatch on your behalf
+  rTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+        Path: /project/
+        PermissionsBoundary: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/vaec/project-admin
+        RoleName: project-vac01cdr-ecs-task-execution-role-800
+        Tags:                
+          - Key: cdr:env
+            Value: dev 
+        AssumeRolePolicyDocument:
+          Version: 2012-10-17
+          Statement:
+          - Effect: Allow
+            Principal:
+              Service: !Sub ecs-tasks.${AWS::URLSuffix}
+            Action: 
+            - sts:AssumeRole
+        ManagedPolicyArns:
+            - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+            
+  rTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+        Path: /project/
+        PermissionsBoundary: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/vaec/project-admin
+        RoleName: project-vac01cdr-ecs-task-role-800
+        Tags:                
+          - Key: cdr:env
+            Value: dev 
+        AssumeRolePolicyDocument:
+          Version: 2012-10-17
+          Statement:
+          - Effect: Allow
+            Principal:
+              Service: !Sub ecs-tasks.${AWS::URLSuffix}
+            Action:
+            - sts:AssumeRole
+        ManagedPolicyArns:
+            - !Ref rTaskPolicy
+    
+  # Customize as needed based on task requirements
+  rTaskPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+        Description: ECS Task policy
+        Path: /project/
+        PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:Describe*
+                Resource: !Sub arn:${AWS::Partition}:logs:*:${AWS::AccountId}:*
+              - Effect: Allow
+                Action:
+                  - s3:Get*
+                Resource: !Sub arn:${AWS::Partition}:s3:::*
+
+ 

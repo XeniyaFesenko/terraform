@@ -16,7 +16,7 @@ phases:
     commands:
       - pwd
       - ls -l
-      - cd terraform/HelloTerraform/
+      - cd HelloTerraform/
       - ls -l
       - terraform init
   build:

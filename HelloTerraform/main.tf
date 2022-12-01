@@ -56,17 +56,17 @@ resource "aws_dynamodb_table" "terraform-lock" {
 
 }
 
-############### Upload state file in s3 bucket with state lock 
-terraform {
-  backend "s3" {
-    encrypt = true
-    bucket= "terraform-s3-demo"
-    dynamodb_table = "terraform-lock-dev"
-    key = "dev-tfstate/terraformstate"
-    region = "us-east-1"
+# ############### Upload state file in s3 bucket with state lock 
+# terraform {
+#   backend "s3" {
+#     encrypt = true
+#     bucket= "terraform-s3-demo"
+#     dynamodb_table = "terraform-lock-dev"
+#     key = "dev-tfstate/terraformstate"
+#     region = "us-east-1"
     
-  }
-} 
+#   }
+# } 
 
 
 

@@ -15,7 +15,7 @@ provider "aws" {
 }
 
 
-#####################################  Create Bucket 
+#####################################  Create s3 Bucket 
 resource "aws_s3_bucket" "state_backup" {
   bucket = "terraform-s3-demo"
   force_destroy = true
@@ -43,30 +43,30 @@ resource "aws_s3_bucket_versioning" "versioning_example" {
 }
 
 
-################### Create Dynamodb Table #################
+# ################### Create Dynamodb Table #################
 
-resource "aws_dynamodb_table" "terraform-lock" {
-  hash_key = "LockID"
-  name =  "terraform-dev-lock"
-  billing_mode = "PAY_PER_REQUEST"
-  attribute {
-    type =  "S"
-    name = "LockID"
-  }
-
-}
-
-# ############### Upload state file in s3 bucket with state lock 
-# terraform {
-#   backend "s3" {
-#     encrypt = true
-#     bucket= "terraform-s3-demo"
-#     dynamodb_table = "terraform-lock-dev"
-#     key = "dev-tfstate/terraformstate"
-#     region = "us-east-1"
-    
+# resource "aws_dynamodb_table" "terraform-lock" {
+#   hash_key = "LockID"
+#   name =  "terraform-dev-lock"
+#   billing_mode = "PAY_PER_REQUEST"
+#   attribute {
+#     type =  "S"
+#     name = "LockID"
 #   }
-# } 
+
+# }
+
+############### Upload state file in s3 bucket with state lock 
+terraform {
+  backend "s3" {
+    encrypt = true
+    bucket= "terraform-s3-demo"
+    dynamodb_table = "terraform-lock-dev"
+    key = "dev-tfstate/terraformstate"
+    region = "us-east-1"
+    
+  }
+} 
 
 
 

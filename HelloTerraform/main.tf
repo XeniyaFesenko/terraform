@@ -17,7 +17,7 @@ provider "aws" {
 
 #####################################  Create Bucket 
 resource "aws_s3_bucket" "state_backup" {
-  bucket = "arvindtfstate-bkp"
+  bucket = "terraform-s3-demo"
   force_destroy = true
   lifecycle {
     prevent_destroy = false
@@ -43,37 +43,34 @@ resource "aws_s3_bucket_versioning" "versioning_example" {
 }
 
 
-#################### Create Dynamodb Table #################
+################### Create Dynamodb Table #################
 
-# resource "aws_dynamodb_table" "terraform-lock" {
-#   hash_key = "LockID"
-#   name =  "terraform-test-lock"
-#   billing_mode = "PAY_PER_REQUEST"
-#   attribute {
-#     type =  "S"
-#     name = "LockID"
-#   }
+resource "aws_dynamodb_table" "terraform-lock" {
+  hash_key = "LockID"
+  name =  "terraform-dev-lock"
+  billing_mode = "PAY_PER_REQUEST"
+  attribute {
+    type =  "S"
+    name = "LockID"
+  }
 
-# }
+}
 
 ############### Upload state file in s3 bucket with state lock 
 terraform {
   backend "s3" {
     encrypt = true
-    bucket= "terraformstae"
-    dynamodb_table = "terraformstate"
-    key = "xenia-tfstate/terraformstate"
+    bucket= "terraform-s3-demo"
+    dynamodb_table = "terraform-lock-dev"
+    key = "dev-tfstate/terraformstate"
     region = "us-east-1"
     
   }
 } 
 
 
-?
 
-
-
-resource "aws_ecr_repository" "tf-ecr" {
+resource "aws_ecr_repository" "dev-ecr" {
   name                 = "terraform-docker"
   image_tag_mutability = "MUTABLE"
 

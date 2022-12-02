@@ -17,7 +17,7 @@ provider "aws" {
 
 #####################################  Create s3 Bucket 
 resource "aws_s3_bucket" "state_backup" {
-  bucket = "terraform-s3-demo"
+  bucket = "xeniya-ft-pipeline-test"
   force_destroy = true
   lifecycle {
     prevent_destroy = false
@@ -60,8 +60,8 @@ resource "aws_s3_bucket_versioning" "versioning_example" {
 terraform {
   backend "s3" {
     encrypt = true
-    bucket= "terraform-s3-demo"
-    dynamodb_table = "terraform-lock-dev"
+    bucket= "tf-statefile-demo"
+    dynamodb_table = "tf-state-lock-dynamo"
     key = "dev-tfstate/terraformstate"
     region = "us-east-1"
     
@@ -70,7 +70,7 @@ terraform {
 
 
 
-resource "aws_ecr_repository" "dev-ecr" {
+resource "aws_ecr_repository" "xeniya-tf-ecr" {
   name                 = "terraform-docker"
   image_tag_mutability = "MUTABLE"
 

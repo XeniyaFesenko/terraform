@@ -15,32 +15,32 @@ provider "aws" {
 }
 
 
-# #####################################  Create s3 Bucket 
-# resource "aws_s3_bucket" "state_backup" {
-#   bucket = "xeniya-ft-pipeline-test"
-#   force_destroy = true
-#   lifecycle {
-#     prevent_destroy = false
-#   }
-# }
+#####################################  Create s3 Bucket 
+resource "aws_s3_bucket" "state_backup" {
+  bucket = "xeniya-ft-pipeline-test"
+  force_destroy = true
+  lifecycle {
+    prevent_destroy = false
+  }
+}
 
-# # Enable/Disable Encryption
-# resource  "aws_s3_bucket_server_side_encryption_configuration" "state_encryption" {
-#   bucket = aws_s3_bucket.state_backup.bucket
-#     rule {
-#         apply_server_side_encryption_by_default {
-#           sse_algorithm  = "AES256"
-#         }    
-#   }
-# }
+# Enable/Disable Encryption
+resource  "aws_s3_bucket_server_side_encryption_configuration" "state_encryption" {
+  bucket = aws_s3_bucket.state_backup.bucket
+    rule {
+        apply_server_side_encryption_by_default {
+          sse_algorithm  = "AES256"
+        }    
+  }
+}
 
-# # Enable Versioning 
-# resource "aws_s3_bucket_versioning" "versioning_example" {
-#    bucket = aws_s3_bucket.state_backup.id
-#    versioning_configuration {
-#     status =   "Enabled" # | "Suspended" 
-#   }
-# }
+# Enable Versioning 
+resource "aws_s3_bucket_versioning" "versioning_example" {
+   bucket = aws_s3_bucket.state_backup.id
+   versioning_configuration {
+    status =   "Enabled" # | "Suspended" 
+  }
+}
 
 
 # ################### Create Dynamodb Table #################
@@ -60,8 +60,8 @@ provider "aws" {
 terraform {
   backend "s3" {
     encrypt = true
-    bucket= "tf-statefile-demo"
-    dynamodb_table = "tf-state-lock-dynamo"
+    bucket= "tf-statefile-demo011"
+    dynamodb_table = "dymanodb-xeniya-terraform"
     key = "dev-tfstate/terraformstate"
     region = "us-east-1"
     

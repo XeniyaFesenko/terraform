@@ -17,7 +17,7 @@ provider "aws" {
 
 #####################################  Create s3 Bucket 
 resource "aws_s3_bucket" "state_backup" {
-  bucket = "xeniya-ft-pipeline-test"
+  bucket = "xeniya-arvind-demo-bucket"
   force_destroy = true
   lifecycle {
     prevent_destroy = false

@@ -60,8 +60,8 @@ resource "aws_s3_bucket_versioning" "versioning_example" {
 terraform {
   backend "s3" {
     encrypt = true
-    bucket= "tf-statefile-demo011"
-    dynamodb_table = "dymanodb-xeniya-terraform"
+    bucket= "xenia-arvind-tfstate"
+    dynamodb_table = "tf-state-lock-dynamo"
     key = "dev-tfstate/terraformstate"
     region = "us-east-1"
     

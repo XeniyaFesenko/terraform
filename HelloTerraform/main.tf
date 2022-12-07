@@ -17,7 +17,7 @@ provider "aws" {
 
 #####################################  Create s3 Bucket 
 resource "aws_s3_bucket" "state_backup" {
-  bucket = "xeniya-arvind-demo-bucket"
+  bucket = "xeniya-arvind-demo-bucket-new-bucket"
   force_destroy = true
   lifecycle {
     prevent_destroy = false
@@ -77,5 +77,16 @@ resource "aws_ecr_repository" "xeniya-tf-ecr" {
   image_scanning_configuration {
     scan_on_push = true
   }
+}
+
+#Create a Ec2 Instances
+resource "aws_instance" "First-Demo" {
+
+    ami = "ami-01216e7612243e0ef"
+    instance_type = "t2.micro"
+    tags = {
+      "Name" = "First-Ec2"
+    }
+  
 }
 

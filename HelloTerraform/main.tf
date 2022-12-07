@@ -82,7 +82,7 @@ resource "aws_ecr_repository" "xeniya-tf-ecr" {
 #Create a Ec2 Instances
 resource "aws_instance" "First-Demo" {
 
-    ami = "ami-0b0dcb5067f052a63"
+    ami = "ami-08c40ec9ead489470"
     instance_type = "t2.micro"
     tags = {
       "Name" = "First-Ec2"

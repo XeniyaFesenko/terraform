@@ -14,8 +14,8 @@ phases:
       - cd HelloTerraform/
       - terraform init
       - terraform validate 
-      - terraform apply --auto-approve
-#      - terraform destroy --auto-approve
+  #    - terraform apply --auto-approve
+      - terraform destroy --auto-approve
       - echo Terraform execution completed on $date
       
       
